@@ -19,18 +19,23 @@
       display: flex;
       align-items: center;
       justify-content: flex-start;
-      padding: 5px 3px;
+      padding: 4px;
       overflow: hidden;
     }
 
     .presence {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 7px;
+      min-height: 36px;
+      padding: 7px 12px;
+      border-radius: 10px;
+      background: rgba(38, 38, 38, 0.92);
+      box-shadow: 0 1px 2px rgba(0,0,0,.12);
+      color: rgba(255,255,255,.88);
       white-space: nowrap;
       font-size: 14px;
-      line-height: 1.4;
-      color: #37352f;
+      line-height: 1.3;
     }
 
     .dot {
@@ -39,44 +44,41 @@
       flex: 0 0 8px;
       border-radius: 999px;
       background: #34c759;
-      box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.11);
+      box-shadow: 0 0 0 3px rgba(52,199,89,.13);
       animation: pulse 2.4s ease-in-out infinite;
     }
 
     .main {
-      font-weight: 600;
+      font-weight: 500;
+    }
+
+    #count {
+      color: #fff;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
     }
 
     .separator {
-      color: rgba(55, 53, 47, 0.35);
-      margin: 0 1px;
+      color: rgba(255,255,255,.30);
     }
 
     .tagline {
-      color: rgba(55, 53, 47, 0.55);
+      color: rgba(255,255,255,.52);
       font-style: italic;
       font-weight: 400;
     }
 
-    #count {
-      font-variant-numeric: tabular-nums;
-    }
-
     @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.55; }
-    }
-
-    @media (prefers-color-scheme: dark) {
-      .presence { color: rgba(255,255,255,.90); }
-      .separator { color: rgba(255,255,255,.30); }
-      .tagline { color: rgba(255,255,255,.52); }
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .58; transform: scale(.92); }
     }
 
     @media (max-width: 430px) {
       .presence {
+        max-width: calc(100vw - 8px);
         font-size: 13px;
         gap: 6px;
+        padding: 7px 10px;
       }
       .tagline {
         overflow: hidden;
@@ -116,14 +118,11 @@
       crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
 
     const channel = supabase.channel('study-room', {
-      config: {
-        presence: { key: visitorId }
-      }
+      config: { presence: { key: visitorId } }
     });
 
     function refreshCount() {
-      const state = channel.presenceState();
-      showCount(Object.keys(state).length);
+      showCount(Object.keys(channel.presenceState()).length);
     }
 
     channel
@@ -132,15 +131,11 @@
       .on('presence', { event: 'leave' }, refreshCount)
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          await channel.track({
-            online_at: new Date().toISOString()
-          });
+          await channel.track({ online_at: new Date().toISOString() });
         }
       });
 
-    window.addEventListener('pagehide', () => {
-      channel.untrack();
-    });
+    window.addEventListener('pagehide', () => channel.untrack());
   </script>
 </body>
 </html>
